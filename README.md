@@ -1,4 +1,4 @@
-# IpApi
+# PHP IP API
 
 Fetch geolocation data for IP addresses from [ip-api.com](https://ip-api.com/).
 
