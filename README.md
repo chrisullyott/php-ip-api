@@ -2,8 +2,6 @@
 
 Fetch geolocation data for IP addresses from [ip-api.com](https://ip-api.com/).
 
-# Usage
-
 ### Installation
 
 ```bash
@@ -15,7 +13,7 @@ $ composer require chrisullyott/php-ip-api
 ```php
 $api = new ChrisUllyott\IpApi();
 
-// Output language and fields (optional):
+// Output language and fields (optional)
 $api->setLanguage('en');
 $api->setFields(['query', 'country', 'city']);
 ```
