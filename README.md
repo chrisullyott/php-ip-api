@@ -73,5 +73,6 @@ Using a newline-separated list of IP addresses, a CSV file of response data will
 $file = 'ips.txt';
 
 $list = new ChrisUllyott\IpApiList($file);
+$list->setFields(['query', 'country', 'city']);
 $list->build();
 ```

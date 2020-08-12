@@ -37,11 +37,18 @@ class IpApiList
     private $toFileHandle;
 
     /**
-     * All possible item keys.
+     * Fields to be contained in the list.
      *
      * @var array
      */
-    private $itemKeys;
+    private $fields;
+
+    /**
+     * All possible item fields.
+     *
+     * @var array
+     */
+    private $itemFields;
 
     /**
      * The IpApi instance.
@@ -86,6 +93,45 @@ class IpApiList
     }
 
     /**
+     * Set the fields to be contained in the list.
+     *
+     * @param array $fields
+     * @return self
+     */
+    public function setFields(array $fields)
+    {
+        $this->fields = $fields;
+
+        return $this;
+    }
+
+    /**
+     * Get the fields to be contained in the list. Fall back to item fields.
+     *
+     * @return array
+     */
+    private function getFields()
+    {
+        return $this->fields ? $this->fields : $this->getItemFields();
+    }
+
+    /**
+     * Get all possible item keys.
+     *
+     * @return array
+     */
+    private function getItemFields()
+    {
+        if (!$this->itemFields) {
+            $a = (array) $this->api->get('8.8.8.8');
+            $b = (array) $this->api->get('X.X.X.X');
+            $this->itemFields = array_keys($a + $b);
+        }
+
+        return $this->itemFields;
+    }
+
+    /**
      * Iteratively request data and build the CSV file.
      *
      * @return self
@@ -122,22 +168,6 @@ class IpApiList
     private function requestItems(array $ips)
     {
         return $this->api->get(array_filter($ips));
-    }
-
-    /**
-     * Get all possible item keys.
-     *
-     * @return array
-     */
-    private function getItemKeys()
-    {
-        if (!$this->itemKeys) {
-            $a = (array) $this->api->get('8.8.8.8');
-            $b = (array) $this->api->get('X.X.X.X');
-            $this->itemKeys = array_keys($a + $b);
-        }
-
-        return $this->itemKeys;
     }
 
     /**
@@ -178,7 +208,7 @@ class IpApiList
         !file_exists($this->toFile) || unlink($this->toFile);
 
         $handle = fopen($this->toFile, 'a');
-        fputcsv($handle, $this->getItemKeys());
+        fputcsv($handle, $this->getFields());
 
         return $handle;
     }
@@ -190,8 +220,10 @@ class IpApiList
      */
     private function writeItem($item)
     {
-        $data = array_fill_keys($this->getItemKeys(), null);
+        $data = array_fill_keys($this->getFields(), null);
         $data = array_merge($data, (array) $item);
+        $data = array_intersect_key($data, array_flip($this->getFields()));
+
         fputcsv($this->getToFileHandle(), $data);
 
         return $this;
