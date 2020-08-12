@@ -33,6 +33,25 @@ class IpApi
     private $connection;
 
     /**
+     * The TTL header.
+     *
+     * @var int
+     */
+    private $X_TTL;
+
+    /**
+     * The rate limit header.
+     *
+     * @var int
+     */
+    private $X_RL;
+
+    /**
+     * The query limit per request.
+     */
+    private static $limit = 100;
+
+    /**
      * The API endpoint.
      *
      * @var string
@@ -55,11 +74,6 @@ class IpApi
         'Content-Type: application/json',
         'Accept: application/json'
     ];
-
-    /**
-     * The query limit per request.
-     */
-    private static $limit = 100;
 
     /**
      * Close the connection on destruct.
@@ -146,6 +160,7 @@ class IpApi
     {
         $opts = [
             CURLOPT_POST => true,
+            CURLOPT_HEADER => true,
             CURLOPT_FAILONERROR => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_URL => static::$endpoint,
@@ -154,7 +169,7 @@ class IpApi
             CURLOPT_POSTFIELDS => $this->buildPayload($query)
         ];
 
-        $data = json_decode($this->request($opts));
+        $data = $this->wait()->request($opts);
 
         return !is_array($query) ? $data[0] : $data;
     }
@@ -200,6 +215,20 @@ class IpApi
     }
 
     /**
+     * Wait until it's safe to make requests.
+     *
+     * @return self
+     */
+    private function wait()
+    {
+        if ($this->X_RL === 0) {
+            sleep($this->X_TTL + 1);
+        }
+
+        return $this;
+    }
+
+    /**
      * Submit a cURL request to the server.
      *
      * @param  array $opts
@@ -212,10 +241,29 @@ class IpApi
         curl_setopt_array($conn, $opts);
         $resp = curl_exec($conn);
 
+        $headerSize = curl_getinfo($conn, CURLINFO_HEADER_SIZE);
+        $header = substr($resp, 0, $headerSize);
+        $body = substr($resp, $headerSize);
+
+        $this->X_TTL = (int) static::getHeader($header, 'X-Ttl');
+        $this->X_RL = (int) static::getHeader($header, 'X-Rl');
+
         if (curl_errno($conn)) {
             throw new \Exception(curl_error($conn));
         }
 
-        return $resp;
+        return json_decode($body);
+    }
+
+    /**
+     * Extract a value from headers by key.
+     *
+     * @param string $headers
+     * @param string $key
+     * @return mixed
+     */
+    private static function getHeader($headers, $key)
+    {
+        return preg_replace("/.*\n{$key}:\s+([^\n]+)\n.*/s", '$1', $headers);
     }
 }

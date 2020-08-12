@@ -65,13 +65,6 @@ class IpApiList
     private static $batchLimit = 100;
 
     /**
-     * The allowed number of requests per minute.
-     *
-     * @var integer
-     */
-    private static $rateLimit = 45;
-
-    /**
      * Constructor.
      *
      * @param string $fromFile
@@ -140,9 +133,6 @@ class IpApiList
     {
         $handle = $this->getFromFileHandle();
 
-        // Try to be nice.
-        $sleepFor = (int) ceil(60 / static::$rateLimit) + 1;
-
         while (!feof($handle)) {
             $lines = [];
             $count = 0;
@@ -152,8 +142,6 @@ class IpApiList
             }
 
             $this->writeItems($this->requestItems($lines));
-
-            sleep($sleepFor);
         }
 
         return $this;
