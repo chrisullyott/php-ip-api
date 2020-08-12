@@ -134,7 +134,7 @@ class IpApiList
         if (!$this->itemKeys) {
             $a = (array) $this->api->get('8.8.8.8');
             $b = (array) $this->api->get('X.X.X.X');
-            $this->itemKeys = array_merge(array_keys($a), array_keys($b));
+            $this->itemKeys = array_keys($a + $b);
         }
 
         return $this->itemKeys;
