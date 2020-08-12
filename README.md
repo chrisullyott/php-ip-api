@@ -67,9 +67,11 @@ Array
 
 ### Request from a file (create CSV)
 
-Using a newline-separated list of IP addresses, a file named `ips.csv` will be built.
+Using a newline-separated list of IP addresses, a CSV file of response data will be created (limited requests at a time).
 
 ```php
-$list = new ChrisUllyott\IpApiList('ips.txt');
+$file = 'ips.txt';
+
+$list = new ChrisUllyott\IpApiList($file);
 $list->build();
 ```
