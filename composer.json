@@ -1,7 +1,7 @@
 {
     "name": "chrisullyott/php-ip-api",
     "type": "library",
-    "description": "A PHP wrapper for PHP-API.com.",
+    "description": "A PHP wrapper for ip-api.com.",
     "homepage": "https://github.com/chrisullyott/php-ip-api",
     "license": "MIT",
     "authors": [{
