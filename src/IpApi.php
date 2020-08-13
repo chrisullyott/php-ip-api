@@ -26,13 +26,6 @@ class IpApi
     private $lang;
 
     /**
-     * The cURL connection.
-     *
-     * @var resource
-     */
-    private $connection;
-
-    /**
      * The TTL header.
      *
      * @var int
@@ -59,29 +52,15 @@ class IpApi
     private static $endpoint = 'http://ip-api.com/batch';
 
     /**
-     * The API user agent.
-     *
-     * @var string
-     */
-    private static $userAgent = 'php-ip-api';
-
-    /**
-     * The request headers for cURL.
+     * The request headers.
      *
      * @var array
      */
     private static $headers = [
+        'User-Agent: PHP-IP-API',
         'Content-Type: application/json',
         'Accept: application/json'
     ];
-
-    /**
-     * Close the connection on destruct.
-     */
-    public function __destruct()
-    {
-        curl_close($this->getConnection());
-    }
 
     /**
      * Set the fields to request.
@@ -158,34 +137,9 @@ class IpApi
      */
     public function get($query)
     {
-        $opts = [
-            CURLOPT_POST => true,
-            CURLOPT_HEADER => true,
-            CURLOPT_FAILONERROR => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => static::$endpoint,
-            CURLOPT_USERAGENT => static::$userAgent,
-            CURLOPT_HTTPHEADER => static::$headers,
-            CURLOPT_POSTFIELDS => $this->buildPayload($query)
-        ];
-
-        $data = $this->wait()->request($opts);
+        $data = $this->wait()->request($query);
 
         return !is_array($query) ? $data[0] : $data;
-    }
-
-    /**
-     * Get the cURL connection.
-     *
-     * @return resource
-     */
-    private function getConnection()
-    {
-        if (!is_resource($this->connection)) {
-            $this->connection = curl_init();
-        }
-
-        return $this->connection;
     }
 
     /**
@@ -229,41 +183,22 @@ class IpApi
     }
 
     /**
-     * Submit a cURL request to the server.
+     * Submit a request to the server.
      *
-     * @param  array $opts
      * @return array
      * @throws Exception
      */
-    private function request($opts)
+    private function request($query)
     {
-        $conn = $this->getConnection();
-        curl_setopt_array($conn, $opts);
-        $resp = curl_exec($conn);
+        $response = \Requests::post(
+            static::$endpoint,
+            static::$headers,
+            $this->buildPayload($query)
+        );
 
-        $headerSize = curl_getinfo($conn, CURLINFO_HEADER_SIZE);
-        $header = substr($resp, 0, $headerSize);
-        $body = substr($resp, $headerSize);
+        $this->X_TTL = (int) $response->headers['x-ttl'];
+        $this->X_RL = (int) $response->headers['x-rl'];
 
-        $this->X_TTL = (int) static::getHeader($header, 'X-Ttl');
-        $this->X_RL = (int) static::getHeader($header, 'X-Rl');
-
-        if (curl_errno($conn)) {
-            throw new \Exception(curl_error($conn));
-        }
-
-        return json_decode($body);
-    }
-
-    /**
-     * Extract a value from headers by key.
-     *
-     * @param string $headers
-     * @param string $key
-     * @return mixed
-     */
-    private static function getHeader($headers, $key)
-    {
-        return preg_replace("/.*\n{$key}:\s+([^\n]+)\n.*/s", '$1', $headers);
+        return json_decode($response->body);
     }
 }
