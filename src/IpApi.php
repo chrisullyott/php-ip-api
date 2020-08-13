@@ -137,17 +137,18 @@ class IpApi
      */
     public function get($query)
     {
-        $data = $this->wait()->request($query);
+        $payload = $this->buildPayload($query);
+        $data = $this->wait()->request($payload);
 
         return !is_array($query) ? $data[0] : $data;
     }
 
     /**
-     * Build the JSON payload for this request. Each IP address submitted must
+     * Build the payload data for this request. Each IP address submitted must
      * individually contain the desired fields and language.
      *
      * @param  string|array $query
-     * @return string
+     * @return array
      */
     private function buildPayload($query)
     {
@@ -165,7 +166,7 @@ class IpApi
             throw new \Exception("Can't request over " . static::$limit . " items.");
         }
 
-        return json_encode($payload);
+        return $payload;
     }
 
     /**
@@ -185,15 +186,16 @@ class IpApi
     /**
      * Submit a request to the server.
      *
+     * @param  array $payload
      * @return array
      * @throws Exception
      */
-    private function request($query)
+    private function request(array $payload)
     {
         $response = \Requests::post(
             static::$endpoint,
             static::$headers,
-            $this->buildPayload($query)
+            json_encode($payload)
         );
 
         $this->X_TTL = (int) $response->headers['x-ttl'];
