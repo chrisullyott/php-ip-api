@@ -198,6 +198,10 @@ class IpApi
             json_encode($payload)
         );
 
+        if ($response->status_code >= 400) {
+            throw new \Exception("API response status: " . $response->status_code);
+        }
+
         $this->X_TTL = (int) $response->headers['x-ttl'];
         $this->X_RL = (int) $response->headers['x-rl'];
 
