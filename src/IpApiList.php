@@ -141,7 +141,8 @@ class IpApiList
                 $lines[] = trim(fgets($handle));
             }
 
-            $this->writeItems($this->requestItems($lines));
+            $items = $this->requestItems(array_filter($lines));
+            $this->writeItems($items);
         }
 
         return $this;
@@ -155,7 +156,7 @@ class IpApiList
      */
     private function requestItems(array $ips)
     {
-        return $this->api->get(array_filter($ips));
+        return $this->api->get($ips);
     }
 
     /**
