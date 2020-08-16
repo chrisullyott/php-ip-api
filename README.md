@@ -1,3 +1,6 @@
+[![Latest Stable Version](https://poser.pugx.org/chrisullyott/php-ip-api/v/stable)](https://packagist.org/packages/chrisullyott/php-ip-api)
+[![Total Downloads](https://poser.pugx.org/chrisullyott/php-ip-api/downloads)](https://packagist.org/packages/chrisullyott/php-ip-api)
+
 # PHP IP API
 
 Fetch geolocation data for IP addresses from [ip-api.com](https://ip-api.com/).
